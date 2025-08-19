@@ -1,0 +1,38 @@
+name: Scrape Negative Headlines
+
+on:
+  schedule:
+    # Run every day at 8 AM UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        pip install google-auth google-api-python-client google-auth-httplib2 requests beautifulsoup4
+
+    - name: Run scraper script
+      env:
+        # These need to be set as GitHub Secrets
+        GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      run: |
+        # Since we cannot directly use authenticate_user() in GitHub Actions,
+        # we need to use a service account key.
+        # This step assumes you have a service account key stored as a GitHub Secret named GCP_SA_KEY.
+        # The key should be in JSON format.
+        echo "$GCP_SA_KEY" > key.json
+        export GOOGLE_APPLICATION_CREDENTIALS=key.json
+        python scrape_headlines.py
+
